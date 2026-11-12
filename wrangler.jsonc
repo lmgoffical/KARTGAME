@@ -1,0 +1,9 @@
+// Cloudflare hosting. `npx wrangler deploy` builds the game and uploads the
+// files in dist/. This serves the game itself; sign-in, shared maps and
+// versus need the Node server in server/, which Cloudflare does not run.
+{
+  "name": "kartgame",
+  "compatibility_date": "2026-11-01",
+  "assets": { "directory": "./dist" },
+  "build": { "command": "npm run build" }
+}
