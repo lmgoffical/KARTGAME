@@ -3,7 +3,7 @@
 // room share one Supabase Realtime channel; nothing is stored. The key is a
 // publishable (public) key, safe to ship in the page.
 export const REALTIME = {
-  url: 'https://muzcxirewzeqmmxxvowk.supabase.co',
-  key: 'sb_publishable_CzJ54kTgvNKIDGSmZ8zFHg_lVe57CLY',
+  url: 'https://skxuwfxbtziblfbvkksa.supabase.co',
+  key: 'sb_publishable_fcMUfTr78tMyub648U75Zw_4-psgdqg',
   prefix: 'turbokarts-',
 };
