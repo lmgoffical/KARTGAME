@@ -57,7 +57,13 @@ Any other host that runs Node works too (Railway, Fly.io, a VPS and so on):
 - Accounts, best times and shared maps are saved in `server/data/db.json`. Set `DATA_FILE` to a path on a persistent disk so they survive restarts.
 - Serve it over HTTPS (most hosts do this for you) so passwords are protected in transit.
 
-Without the server (for example, opening the built files from a static host) the game still works as a guest: racing, medals and the map builder all work and save on the device, but sign-in, shared maps and versus are switched off.
+### Without the server (Cloudflare and other static hosts)
+
+The built game also runs as a plain website with no server behind it. `wrangler.jsonc` deploys it to Cloudflare that way.
+
+- **Versus still works.** Players in a room share a Supabase Realtime channel and the player who made the room runs it; nothing is stored. The project address and its publishable key are in `src/net/config.js`.
+- Racing, medals and the map builder work and save on each player's device.
+- Sign-in, shared maps and leaderboards are switched off, because they need the server.
 
 ## For developers
 

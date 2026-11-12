@@ -9,6 +9,8 @@ import { buildTrack, validateDef, formatTime, medalFor, MEDAL_RANK, wrapAngle } 
 import { medalTimes } from './game/physics.js';
 import { api } from './net/api.js';
 import { Versus } from './net/versus.js';
+import { PeerVersus } from './net/peer-versus.js';
+import { openSupabaseChannel } from './net/supabase-channel.js';
 import { Editor } from './editor/editor.js';
 import { storage } from './storage.js';
 
@@ -85,7 +87,9 @@ function medalsFor(def) {
 const input = new Input();
 const sound = new Sound();
 const game = new Game($('view'), input, sound);
-const versus = new Versus();
+// With the game server, versus goes through it. Without one (a plain website),
+// boot swaps this for the server-free kind that shares a realtime channel.
+let versus = new Versus();
 input.bindTouch(document.body);
 window.addEventListener('pointerdown', () => sound.unlock(), { capture: true });
 window.addEventListener('keydown', () => sound.unlock(), { capture: true });
@@ -189,8 +193,8 @@ $('b-play').addEventListener('click', () => {
   renderLevels();
 });
 $('b-builder').addEventListener('click', () => openEditor(null));
-$('b-versus').addEventListener('click', () => {
-  if (!api.online) return toast('Versus needs the game server. See the README to start it.', true);
+$('b-versus').addEventListener('click', async () => {
+  await ready;
   show('versus');
   renderVersus();
 });
@@ -857,7 +861,7 @@ versus.on = (type, m) => {
       netTimer = setInterval(() => {
         if (race?.mode !== 'versus' || !game.player) return clearInterval(netTimer);
         versus.send({ t: 'state', s: game.playerNetState() });
-      }, 66);
+      }, versus.sendMs || 66);
       break;
     }
     case 'state':
@@ -914,11 +918,16 @@ function showVersusResults(results) {
 // --------------------------------------------------------------------- boot
 
 show('menu');
-api.init().then(() => {
+const ready = api.init().then(() => {
+  if (!api.online) {
+    const handler = versus.on;
+    versus = new PeerVersus(openSupabaseChannel);
+    versus.on = handler;
+  }
   if (api.user && Number.isInteger(api.user.color) && !storage.get(PROFILE_KEY)) profile.color = api.user.color;
   if (screen === 'menu') renderMenu();
   const code = new URLSearchParams(location.search).get('room');
-  if (code && api.online) {
+  if (code) {
     history.replaceState(null, '', location.pathname);
     show('versus');
     renderVersus();
@@ -929,4 +938,4 @@ api.init().then(() => {
 });
 
 // Handy for debugging from the browser console.
-window.__tk = { game, api, versus, profile, editor };
+window.__tk = { game, api, profile, editor, get versus() { return versus; } };
