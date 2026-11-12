@@ -1,0 +1,12 @@
+# One-click hosting on render.com: New > Blueprint > pick this repository > Apply.
+services:
+  - type: web
+    name: turbo-karts
+    runtime: node
+    plan: free
+    buildCommand: npm install --include=dev && npm run build
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_VERSION
+        value: "22"

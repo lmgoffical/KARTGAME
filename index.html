@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="#0b0e1a" />
+    <title>Turbo Karts</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23ff5a1f'/%3E%3Cpath d='M8 9h16v4h-6v11h-4V13H8z' fill='%23fff'/%3E%3C/svg%3E" />
+    <link rel="stylesheet" href="/src/styles.css" />
+  </head>
+  <body>
+    <canvas id="view"></canvas>
+    <div id="vignette"></div>
+
+    <!-- In-race display -->
+    <div id="hud" hidden>
+      <div class="hud-tl">
+        <div class="hud-box"><span class="label">LAP</span><b id="h-lap">1</b><i id="h-laps">/3</i></div>
+        <div class="hud-box">
+          <span class="label">CHECKPOINTS</span><b id="h-gate">0</b><i id="h-gates">/6</i>
+          <div id="h-pips" class="pips"></div>
+        </div>
+      </div>
+      <div class="hud-tc">
+        <div id="h-time" class="timer">0:00.00</div>
+        <div id="h-medals" class="targets"></div>
+      </div>
+      <div class="hud-tr">
+        <div id="h-place" class="place"><b>1</b><sup>st</sup><i>/6</i></div>
+        <canvas id="h-map" width="320" height="320"></canvas>
+      </div>
+      <div class="hud-br">
+        <div id="h-charge" class="charge"><span></span></div>
+        <div class="speedo"><b id="h-speed">0</b><i>km/h</i></div>
+      </div>
+      <div class="hud-btns">
+        <button data-touch="reset" title="Back to last checkpoint (R)">RESET</button>
+        <button data-touch="pause" title="Pause (Esc)">II</button>
+      </div>
+      <div id="h-msg" class="msg"></div>
+      <div id="h-warn" class="warn" hidden><span id="h-arrow" class="arrow"></span><span id="h-warn-text"></span></div>
+      <div id="h-count" class="count"></div>
+      <div id="h-wait" class="wait" hidden></div>
+    </div>
+
+    <div id="touch" hidden>
+      <div class="pad-left">
+        <button data-touch="left" aria-label="Steer left">&#9664;</button>
+        <button data-touch="right" aria-label="Steer right">&#9654;</button>
+      </div>
+      <div class="pad-right">
+        <button data-touch="brake" class="small">BRAKE</button>
+        <button data-touch="drift" class="small drift">DRIFT</button>
+        <button data-touch="gas" class="gas">GO</button>
+      </div>
+    </div>
+
+    <!-- Menus -->
+    <section id="s-menu" class="screen" hidden>
+      <div class="topbar">
+        <button id="b-account" class="chip"></button>
+        <button id="b-settings" class="chip">Settings</button>
+      </div>
+      <div class="menu-main">
+        <h1 class="logo"><span>TURBO</span><span>KARTS</span></h1>
+        <p class="tag">Hit every checkpoint. Beat the clock. Go for gold.</p>
+        <div class="menu-buttons">
+          <button id="b-play" class="btn primary big">RACE</button>
+          <button id="b-versus" class="btn big">VERSUS <small>race your friends online</small></button>
+          <button id="b-builder" class="btn big">MAP BUILDER <small>make your own tracks</small></button>
+        </div>
+        <div class="picker">
+          <span class="label">YOUR KART</span>
+          <div id="colors" class="colors"></div>
+        </div>
+        <p id="offline-note" class="note" hidden>Playing offline as a guest. Sign-in, shared maps and versus need the game server.</p>
+      </div>
+    </section>
+
+    <section id="s-levels" class="screen panel-screen" hidden>
+      <header>
+        <button class="btn back" data-go="menu">&#8592; Back</button>
+        <h2>Choose a track</h2>
+        <div class="tabs" id="level-tabs">
+          <button data-tab="cups" class="on">Cups</button>
+          <button data-tab="mine">My maps</button>
+          <button data-tab="community">Community</button>
+        </div>
+      </header>
+      <div class="levels-body">
+        <div id="level-grid" class="grid"></div>
+        <aside id="level-detail" class="detail"></aside>
+      </div>
+    </section>
+
+    <section id="s-versus" class="screen panel-screen" hidden>
+      <header>
+        <button class="btn back" id="b-vs-back">&#8592; Leave</button>
+        <h2>Versus</h2>
+      </header>
+      <div id="vs-join" class="vs-join">
+        <div class="card">
+          <h3>Start a room</h3>
+          <p>You get a code to send to your friends. Up to 8 racers.</p>
+          <label id="vs-name-row">Your name<input id="vs-name" maxlength="16" autocomplete="off" /></label>
+          <button id="b-vs-create" class="btn primary">Create room</button>
+        </div>
+        <div class="card">
+          <h3>Join a room</h3>
+          <p>Type the 5-letter code your friend sent you.</p>
+          <input id="vs-code" class="code-input" maxlength="5" placeholder="CODE" autocomplete="off" autocapitalize="characters" />
+          <button id="b-vs-join" class="btn primary">Join</button>
+        </div>
+      </div>
+      <div id="vs-lobby" class="vs-lobby" hidden>
+        <div class="card">
+          <span class="label">ROOM CODE</span>
+          <div class="room-code" id="vs-room-code"></div>
+          <button id="b-vs-copy" class="btn">Copy invite link</button>
+          <h3>Racers</h3>
+          <ul id="vs-players" class="players"></ul>
+        </div>
+        <div class="card">
+          <span class="label">TRACK</span>
+          <div id="vs-track" class="vs-track"></div>
+          <label id="vs-track-pick-row">Change track<select id="vs-track-pick"></select></label>
+          <p id="vs-status" class="note"></p>
+          <button id="b-vs-start" class="btn primary big">START RACE</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="s-results" class="screen center-screen" hidden>
+      <div class="card results">
+        <div id="r-medal" class="medal big"></div>
+        <h2 id="r-title"></h2>
+        <div id="r-time" class="timer"></div>
+        <p id="r-sub"></p>
+        <div id="r-table"></div>
+        <div class="row" id="r-buttons"></div>
+      </div>
+    </section>
+
+    <section id="s-pause" class="screen center-screen" hidden>
+      <div class="card">
+        <h2>Paused</h2>
+        <div class="col">
+          <button id="b-resume" class="btn primary">Resume</button>
+          <button id="b-restart" class="btn">Restart</button>
+          <button id="b-sound" class="btn">Sound and graphics</button>
+          <button id="b-quit" class="btn">Quit race</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Map builder -->
+    <div id="editor" hidden>
+      <canvas id="ed-canvas"></canvas>
+      <div class="ed-tools">
+        <button data-tool="draw" class="on" title="Tap to add points. Drag a point to move it.">Draw</button>
+        <button data-tool="erase" title="Tap a point or boost pad to remove it.">Erase</button>
+        <button data-tool="pad" title="Tap the road to place a boost pad.">Boost pad</button>
+        <button data-tool="obstacle" title="Tap the road to place an obstacle.">Obstacle</button>
+        <select id="ed-obstacle" aria-label="Obstacle type">
+          <option value="cone">Cone</option>
+          <option value="tyres">Tyre stack</option>
+          <option value="oil">Oil slick</option>
+          <option value="ramp">Jump ramp</option>
+          <option value="gap">Gap to jump</option>
+        </select>
+        <span class="sep"></span>
+        <button id="ed-undo">Undo</button>
+        <button id="ed-zoom-in" aria-label="Zoom in">+</button>
+        <button id="ed-zoom-out" aria-label="Zoom out">&minus;</button>
+        <button id="ed-fit">Fit</button>
+      </div>
+      <div class="ed-panel">
+        <div class="ed-head">
+          <button class="btn back" id="ed-exit">&#8592; Menu</button>
+          <h2>Map builder</h2>
+        </div>
+        <label>Name<input id="ed-name" maxlength="32" /></label>
+        <label>Scenery
+          <select id="ed-theme">
+            <option value="meadow">Meadow</option>
+            <option value="desert">Desert</option>
+            <option value="snow">Snow (slippery)</option>
+            <option value="neon">Neon night</option>
+          </select>
+        </label>
+        <label>Road width <output id="ed-width-out"></output><input id="ed-width" type="range" min="9" max="24" step="1" /></label>
+        <label>Laps <output id="ed-laps-out"></output><input id="ed-laps" type="range" min="1" max="9" step="1" /></label>
+        <label>Checkpoints <output id="ed-cp-out"></output><input id="ed-cp" type="range" min="3" max="24" step="1" /></label>
+        <label>Height of selected point <output id="ed-height-out"></output><input id="ed-height" type="range" min="0" max="40" step="0.5" disabled /></label>
+        <div id="ed-info" class="ed-info"></div>
+        <div class="row">
+          <button id="ed-test" class="btn primary">Test drive</button>
+          <button id="ed-save" class="btn">Save</button>
+        </div>
+        <div class="row">
+          <button id="ed-publish" class="btn">Share online</button>
+          <button id="ed-flip" class="btn">Reverse</button>
+        </div>
+        <div class="row">
+          <button id="ed-export" class="btn ghost">Copy code</button>
+          <button id="ed-import" class="btn ghost">Paste code</button>
+          <button id="ed-new" class="btn ghost">New</button>
+        </div>
+        <p class="note">Tap to add points and the road loops through them. Tap a point and raise its height to make hills and bridges. Add boost pads and obstacles: cones slow you, tyre stacks block you, oil makes you slide, ramps launch you, and gaps swallow anyone going too slowly. Drag empty space to move the view. Racers must pass every numbered checkpoint in order.</p>
+      </div>
+    </div>
+
+    <div id="modal" class="modal" hidden><div class="card" id="modal-card"></div></div>
+    <div id="toasts"></div>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
