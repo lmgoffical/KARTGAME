@@ -1,9 +1,14 @@
-// Cloudflare hosting. `npx wrangler deploy` builds the game and uploads the
-// files in dist/. Versus works there too; sign-in, shared maps and
-// leaderboards need the Node server in server/, which Cloudflare does not run.
+// Cloudflare hosting.
+//
+// The game is OFFLINE for now: this deploys the "back soon" page in offline/.
+// To put the game back, set the two lines marked below to:
+//   "assets": { "directory": "./dist" },
+//   "build": { "command": "npm run build" }
+// With those, `npx wrangler deploy` builds the game and uploads dist/.
+// Versus works on Cloudflare; sign-in, shared maps and leaderboards need the
+// Node server in server/, which Cloudflare does not run.
 {
   "name": "kartgame",
   "compatibility_date": "2026-11-01",
-  "assets": { "directory": "./dist" },
-  "build": { "command": "npm run build" }
+  "assets": { "directory": "./offline" } // game: "./dist", plus the build line above
 }

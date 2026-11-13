@@ -1,5 +1,7 @@
 # Turbo Karts
 
+> **Offline for now.** The live site shows a "back soon" page while the game is being updated. All the game code is still here; `wrangler.jsonc` says how to switch it back on.
+
 A 3D kart racing game that runs in the browser, on computers and phones.
 
 - **Four tracks** (meadow, desert, snow, neon city), each with **Bronze, Silver and Gold** medal times. Earn a medal to unlock the next track.
